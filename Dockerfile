@@ -8,6 +8,12 @@ RUN apt-get update && apt-get install -y \
     ros-humble-cv-bridge \
 	ros-humble-image-transport \
     ros-humble-compressed-image-transport \
+    ros-humble-rviz2 \
+    ros-humble-rqt \
+    ros-humble-rqt-image-view \
+    libgl1-mesa-glx \
+    libx11-xcb1 \
+    libxkbcommon-x11-0 \
  && rm -rf /var/lib/apt/lists/*
 
 # Copy your ROS2 workspace into container
