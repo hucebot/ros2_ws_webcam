@@ -12,7 +12,8 @@ docker run -it --rm \
   --net host \
   --ipc host \
   --pid host \
-  --device /dev/video10:/dev/video0 \
-  --device /dev/video6:/dev/video1 \
-  --device /dev/video8:/dev/video2 \
+  --device /dev/video0:/dev/video0 \
+  --device /dev/video8:/dev/video1 \
+  --device /dev/video10:/dev/video2 \
+  -v /media/panda-ai/Data/rosbags:/rosbags \
   webcam_ros2 \

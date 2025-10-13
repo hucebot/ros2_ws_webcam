@@ -246,8 +246,8 @@ ros2 launch realsense2_camera rs_launch.py
 
 ```bash
 ros2 launch realsense2_camera rs_launch.py \
-    rgb_camera.color_profile:=640,480,30 \
-    depth_module.depth_profile:=640,480,30 \
+    rgb_camera.color_profile:=640,480,15 \
+    depth_module.depth_profile:=640,480,15 \
     align_depth.enable:=true
 ```
 
@@ -256,15 +256,15 @@ If you disable depth, you can reach up to 40Hz:
 ```bash
 ros2 launch realsense2_camera rs_launch.py \
     enable_depth:=false \
-    rgb_camera.color_profile:=640,480,60
+    rgb_camera.color_profile:=640,480,30
 ```
 
 Compute pointcloud:
 
 ```bash
 ros2 launch realsense2_camera rs_launch.py \
-    rgb_camera.color_profile:=640,480,60 \
-    depth_module.depth_profile:=640,480,60 \
+    rgb_camera.color_profile:=640,480,15 \
+    depth_module.depth_profile:=640,480,15 \
     align_depth.enable:=true \
     pointcloud.enable:=true
  ```
