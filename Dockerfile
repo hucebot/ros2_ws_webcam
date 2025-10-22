@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-rviz2 \
     ros-humble-rqt \
     ros-humble-rqt-image-view \
+    ros-humble-rmw-cyclonedds-cpp \
     libgl1-mesa-glx \
     libx11-xcb1 \
     libxkbcommon-x11-0 \
@@ -27,3 +28,4 @@ RUN . /opt/ros/humble/setup.sh && colcon build
 SHELL ["/bin/bash", "-c"]
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /ros2_ws_webcam/install/setup.bash" >> ~/.bashrc
+RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
