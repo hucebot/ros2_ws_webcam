@@ -1,4 +1,75 @@
-# Docker
+# Webcam docker
+
+This docker file can be used to setup automatically webcams and make them publish topics on ROS2 Humble.
+
+## 1. Build docker
+
+Digit the following command (in the folder where **Dockerfile** is located) to create the docker image:
+
+```bash
+docker build -t webcam_ros2 .
+```
+
+## 2. Access container
+
+From the same folder, digit the following command:
+
+```bash
+./docker_run.sh
+```
+
+## 3. Start webcams
+
+List video devices:
+
+```bash
+v4l2-ctl --list-devices
+```
+
+Get info about video devices:
+
+```bash
+v4l2-ctl --list-formats-ext -d /dev/video9
+```
+
+Get real stream frequency:
+
+```bash
+v4l2-ctl --device=/dev/video9 --stream-mmap --stream-count=100
+```
+
+Once inside the container, you can start your ROS2 node by launching multiple webcam publishers:
+
+```bash
+ros2 launch launcher_pkg launch_file.py \
+    video_device1:=/dev/video0 \
+    video_device2:=/dev/video1 \
+    video_device3:=/dev/video2 \
+    image_width:=640 \
+    image_height:=480 \
+    framerate:=15 \
+    transport_on:=true
+```
+
+**Note**: This command must be modified based on the number of webcams and based on the device port numbers (```v4l2-ctl --list-devices```).
+
+Since the webcame node publishes compressed PNG images, I need transport node to convert them in Image type to display on RVIz. This is done by enabling ''transport_on:=true'' in the roslaunch command. 
+
+Otherwise, from terminal:
+
+```bash
+ros2 run image_transport republish compressed raw \
+    --ros-args -r in/compressed:=/webcam1/image_raw \
+               -r out:=/webcam1/image_raw/compressed
+```
+
+To visualize:
+
+```bash
+ros2 run rqt_image_view rqt_image_view
+```
+
+## Docker deep dive
 
 It is a tool to package and run software in isolated environments.
 
@@ -94,7 +165,7 @@ docker rmi <image_id_or_name>
 To delete containers:
 
 ```bash
-docker rm -f <container_id_or_name>  # forza la rimozione fermando il container
+docker rm -f <container_id_or_name>  # force cancellation
 docker container prune # delete all unused containers
 ```
 
@@ -141,199 +212,4 @@ After that you can launch it with:
 
 ```bash
 ./docker_run.sh
-```
-
-## 4. Docker compose
-
-Assume you want to run both a webcam node and a Realsense node in separate containers (i.e., each coming from a different Docker image/Dockerfile: one containing the webcam code and the other containing the Realsense code).
-
-You can launch them either with two separate docker run commands or with Docker Compose.
-
-However, in both cases, the topics published by each node are automatically visible to the other container only when run from the same laptop. Otherwise, if you want the nodes to communicate, you need additional configuration, such as:
-
-- Using --network host mode
-- Configuring the same ROS_DOMAIN_ID
-
-This ensures that the ROS2 nodes across containers can see each other and exchange topics.
-
-```bash
-version: "3.9"
-
-services:
-  webcam:
-    image: webcam_ros2
-    devices:
-      - "/dev/video0:/dev/video0"
-      - "/dev/video1:/dev/video1"
-    command: >
-      ros2 launch webcam_pkg my_launch_file.launch.py
-      video_device1:=/dev/video0
-      video_device2:=/dev/video1
-
-  realsense:
-    image: realsense_ros2
-    devices:
-      - "/dev/video2:/dev/video2"
-    command: >
-      ros2 launch realsense2_camera rs_launch_file.launch.py
-```
-
-### 4.1 Compose usage
-
-1) Separate repositories/images:
-
-    One repo (or pre-built image) for the webcam node, containing its Dockerfile.
-
-    Another repo (or pre-built image) for the Realsense node, with its Dockerfile.
-
-    The other person either clones the repos and builds the images locally using docker build, or you provide pre-built images on Docker Hub/registry.
-
-2) docker-compose folder:
-
-    In a separate, empty folder, you put just the docker-compose.yml that references those images.
-
-    The docker-compose.yml defines both services (webcam and Realsense), mounts devices, sets network mode, etc.
-
-3) Running the setup:
-
-    From that folder, they run:
-
-    ```bash
-    docker compose up
-    ```
-
-    Compose will start two containers (or more if you define more nodes) based on the images.
-
-4) To stop (and delete) containers activated through compose:
-
-    ```bash
-    docker compose down
-    ```
-
-### 4.2 Compose with multiple shells
-
-To launch your nodes and keep them running in the background, you can use compose in detached mode:
-
-```bash
-docker compose up -d
-```
-
-Then you can open a shell in the running container whenever you want to digit new commands (rostopic list, roslaunch, ...):
-
-```bash
-docker compose exec webcam bash
-```
-
-## 5. Cameras
-
-### 5.1 Realsense
-
-Installation guide for realsense:
-
-https://github.com/IntelRealSense/realsense-ros
-
-To check whether realsense is connected:
-
-```bash
-lsusb | grep RealSense
-```
-
-Once inside the container, you can start your ROS2 node by launching realsense node:
-
-```bash
-ros2 launch realsense2_camera rs_launch.py
-```
-
-```bash
-ros2 launch realsense2_camera rs_launch.py \
-    rgb_camera.color_profile:=640,480,15 \
-    depth_module.depth_profile:=640,480,15 \
-    align_depth.enable:=true
-```
-
-If you disable depth, you can reach up to 40Hz:
-
-```bash
-ros2 launch realsense2_camera rs_launch.py \
-    enable_depth:=false \
-    rgb_camera.color_profile:=640,480,30
-```
-
-Compute pointcloud:
-
-```bash
-ros2 launch realsense2_camera rs_launch.py \
-    rgb_camera.color_profile:=640,480,15 \
-    depth_module.depth_profile:=640,480,15 \
-    align_depth.enable:=true \
-    pointcloud.enable:=true
- ```
-
-**Note**: To visualize the pointcloud in RViz, select the frame = camera_link.
-
-Important topics:
-
-```bash
-ros2 topic hz /camera/camera/aligned_depth_to_color/image_raw
-ros2 topic hz /camera/camera/aligned_depth_to_color/image_raw/compressed
-```
-
-```bash
-ros2 topic hz /camera/camera/color/image_raw
-ros2 topic hz /camera/camera/color/image_raw/compressed
-```
-
-To visualize:
-
-```bash
-ros2 run rqt_image_view rqt_image_view
-```
-
-#### 5.1.1 Realsense issues
-
-ros2 topic echo /camera/camera/color/image_raw --once
- 
---> vedo che ripubblica jpeg , come cambio in png??
-
-### 5.2 Webcam
-
-List video devices:
-
-```bash
-v4l2-ctl --list-devices
-```
-
-Get info about video devices:
-
-```bash
-v4l2-ctl --list-formats-ext -d /dev/video9
-```
-
-Get real stream frequency:
-
-```bash
-v4l2-ctl --device=/dev/video9 --stream-mmap --stream-count=100
-```
-
-Once inside the container, you can start your ROS2 node by launching multiple webcam publishers:
-
-```bash
-ros2 launch launcher_pkg launch_file.py \
-    video_device1:=/dev/video0 \
-    video_device2:=/dev/video1 \
-    video_device3:=/dev/video2 \
-    image_width:=640 \
-    image_height:=480 \
-    framerate:=15 \
-    transport_on:=true
-```
-
-Since the webcame node publishes compressed PNG images, I need transport node to convert them in Image type to display on RVIz. This is done by enabling ''transport_on:=true'' in the roslaunch command. 
-
-Otherwise, from terminal:
-
-```bash
-ros2 run image_transport republish compressed raw \
-    --ros-args -r in/compressed:=/webcam1/image_raw \
-               -r out:=/webcam1/image_raw/compressed
 ```
