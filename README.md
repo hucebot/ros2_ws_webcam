@@ -47,8 +47,8 @@ ros2 launch launcher_pkg launch_file.py \
     video_device3:=/dev/video2 \
     image_width:=640 \
     image_height:=480 \
-    framerate:=15 \
-    transport_on:=true
+    framerate:=30 \
+    transport_on:=false
 ```
 
 **Note**: This command must be modified based on the number of webcams and based on the device port numbers (```v4l2-ctl --list-devices```).

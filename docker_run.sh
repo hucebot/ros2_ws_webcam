@@ -14,6 +14,6 @@ docker run -it --rm \
     --ipc host \
     --pid host \
     --device /dev/video0:/dev/video0 \
-    --device /dev/video8:/dev/video1 \
-    --device /dev/video10:/dev/video2 \
+    --device /dev/video10:/dev/video1 \
+    --device /dev/video14:/dev/video2 \
     webcam_ros2 \

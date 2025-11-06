@@ -51,7 +51,7 @@ class WebcamPublisher(Node):
         ret, frame = self.cap.read()
 
         if ret:
-            msg = self.bridge.cv2_to_compressed_imgmsg(frame, dst_format='png')
+            msg = self.bridge.cv2_to_compressed_imgmsg(frame, dst_format='jpeg')
             # msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = self.frame_id
             self.pub.publish(msg)
